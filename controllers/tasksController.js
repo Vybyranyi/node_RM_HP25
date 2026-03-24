@@ -11,6 +11,8 @@ export const createTask = (req, res) => {
     id: Date.now(),
     title,
     done: false,
+    createdAt: req.requestTime,
+    updatedAt: req.requestTime,
   };
 
   tasks.push(newTask);
@@ -68,6 +70,8 @@ export const updateTask = (req, res) => {
     id: id,
     title: req.body.title,
     done: req.body.done,
+    createdAt: req.body.createdAt,
+    updatedAt: req.requestTime,
   };
 
   fs.writeFileSync(DB, JSON.stringify(tasks));

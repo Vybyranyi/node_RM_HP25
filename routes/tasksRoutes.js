@@ -6,14 +6,15 @@ import {
   getTaskById,
   updateTask,
   updateTaskStatus,
-} from "./controllers/tasksController";
+} from "../controllers/tasksController.js";
+import { addTimestamp } from "../middlewares/addTimestamp.js";
 
 const router = express.Router();
 
-router.post("/", createTask);
+router.post("/", addTimestamp, createTask);
 router.get("/", getAllTasks);
 router.get("/:id", getTaskById);
-router.put("/:id", updateTask);
+router.put("/:id", addTimestamp, updateTask);
 router.patch("/:id", updateTaskStatus);
 router.delete("/:id", deleteTask);
 
