@@ -1,43 +1,54 @@
 import fs from "fs";
 const DB = "db.json";
 
+import db from "../config/db.js";
+
 export const createTask = (req, res) => {
   const title = req.body.title;
+  const timeNow = new Date();
 
-  const dbData = fs.readFileSync(DB, "utf8");
-  const tasks = JSON.parse(dbData);
+  const sqlCommand =
+    "INSERT INTO tasks_table (title, done, createdAt, updatedAt) VALUES (?, ?, ?, ?)";
 
-  const newTask = {
-    id: Date.now(),
-    title,
-    done: false,
-    createdAt: req.requestTime,
-    updatedAt: req.requestTime,
-  };
+  db.query(sqlCommand, [title, false, timeNow, timeNow], (error, results) => {
+    if (error)
+      return res
+        .status(500)
+        .json({ message: "Помилка при створенні завдання", error: error });
 
-  tasks.push(newTask);
-
-  fs.writeFileSync(DB, JSON.stringify(tasks));
-
-  res.json({
-    mesage: "Task created!",
-    task: newTask,
+    res.json({
+      message: "Завдання успішно створено",
+      task: {
+        id: results.insertId,
+        title: title,
+        done: false,
+        createdAt: timeNow,
+        updatedAt: timeNow,
+      },
+    });
   });
-}
+};
 
 export const getAllTasks = (req, res) => {
-  const dbData = fs.readFileSync(DB, "utf8");
-  let tasks = JSON.parse(dbData);
-
   const done = req.query.done;
 
-  if (done !== undefined) {
-    const doneBool = done === "true";
-    tasks = tasks.filter((t) => t.done === doneBool);
+  let sqlCommand = "SELECT * FROM tasks_table";
+  let params = [];
+
+  if(done !== undefined) {
+    sqlCommand = "SELECT * FROM tasks_table WHERE done = ?";
+    params.push(done === "true" ? 1 : 0);
   }
 
-  res.json(tasks);
-}
+  db.query(sqlCommand, params, (error, results) => {
+    if (error)
+      return res
+        .status(500)
+        .json({ message: "Помилка при створенні завдання", error: error });
+
+    res.json(results);
+  });
+};
 
 export const getTaskById = (req, res) => {
   const id = req.params.id;
@@ -52,7 +63,7 @@ export const getTaskById = (req, res) => {
   }
 
   res.json(foundTask);
-}
+};
 
 export const updateTask = (req, res) => {
   const id = parseInt(req.params.id);
@@ -77,7 +88,7 @@ export const updateTask = (req, res) => {
   fs.writeFileSync(DB, JSON.stringify(tasks));
 
   res.json({ message: "Завдання повністю оновлено" });
-}
+};
 
 export const updateTaskStatus = (req, res) => {
   const id = parseInt(req.params.id);
@@ -96,7 +107,7 @@ export const updateTaskStatus = (req, res) => {
   fs.writeFileSync(DB, JSON.stringify(tasks));
 
   res.json({ message: "Статус оновлено" });
-}
+};
 
 export const deleteTask = (req, res) => {
   const id = parseInt(req.params.id);
@@ -115,4 +126,4 @@ export const deleteTask = (req, res) => {
   fs.writeFileSync(DB, JSON.stringify(tasks));
 
   res.json({ message: "завдання видалено" });
-}
+};

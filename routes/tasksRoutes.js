@@ -7,14 +7,13 @@ import {
   updateTask,
   updateTaskStatus,
 } from "../controllers/tasksController.js";
-import { addTimestamp } from "../middlewares/addTimestamp.js";
 
 const router = express.Router();
 
-router.post("/", addTimestamp, createTask);
+router.post("/", createTask);
 router.get("/", getAllTasks);
 router.get("/:id", getTaskById);
-router.put("/:id", addTimestamp, updateTask);
+router.put("/:id", updateTask);
 router.patch("/:id", updateTaskStatus);
 router.delete("/:id", deleteTask);
 
