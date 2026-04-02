@@ -2,6 +2,7 @@ import fs from "fs";
 const DB = "db.json";
 
 import db from "../config/db.js";
+import { randomBytes } from "crypto";
 
 export const createTask = (req, res) => {
   const title = req.body.title;
@@ -35,7 +36,7 @@ export const getAllTasks = (req, res) => {
   let sqlCommand = "SELECT * FROM tasks_table";
   let params = [];
 
-  if(done !== undefined) {
+  if (done !== undefined) {
     sqlCommand = "SELECT * FROM tasks_table WHERE done = ?";
     params.push(done === "true" ? 1 : 0);
   }
@@ -44,25 +45,30 @@ export const getAllTasks = (req, res) => {
     if (error)
       return res
         .status(500)
-        .json({ message: "Помилка при створенні завдання", error: error });
+        .json({ message: "Помилка при отриманні завдань", error: error });
 
     res.json(results);
   });
 };
 
 export const getTaskById = (req, res) => {
-  const id = req.params.id;
+  const id = Number(req.params.id);
 
-  const dbData = fs.readFileSync(DB, "utf8");
-  const tasks = JSON.parse(dbData);
+  const sqlCommand = "SELECT * FROM tasks_table WHERE id = ?";
 
-  const foundTask = tasks.find((t) => t.id === Number(id));
+  db.query(sqlCommand, [id], (error, results) => {
+    if (error)
+      return res
+        .status(500)
+        .json({ message: "Помилка при отриманні завдання", error: error });
 
-  if (!foundTask) {
-    res.status(404).json({ message: "Task not found" });
-  }
-
-  res.json(foundTask);
+    if (results.length === 0)
+      return res
+        .status(404)
+        .json({ message: "Завдання не знайдено" });
+    
+    res.json(results[0]);
+  });
 };
 
 export const updateTask = (req, res) => {
