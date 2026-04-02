@@ -2,7 +2,6 @@ import fs from "fs";
 const DB = "db.json";
 
 import db from "../config/db.js";
-import { randomBytes } from "crypto";
 
 export const createTask = (req, res) => {
   const title = req.body.title;
@@ -63,73 +62,67 @@ export const getTaskById = (req, res) => {
         .json({ message: "Помилка при отриманні завдання", error: error });
 
     if (results.length === 0)
-      return res
-        .status(404)
-        .json({ message: "Завдання не знайдено" });
-    
+      return res.status(404).json({ message: "Завдання не знайдено" });
+
     res.json(results[0]);
   });
 };
 
 export const updateTask = (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = Number(req.params.id);
+  const title = req.body.title;
+  const timeNow = new Date();
 
-  const dbData = fs.readFileSync(DB, "utf8");
-  const tasks = JSON.parse(dbData);
+  const sqlCommand =
+    "UPDATE tasks_table SET title = ?, updatedAt = ? WHERE id = ?";
 
-  const taskIndex = tasks.findIndex((t) => t.id === id);
+  db.query(sqlCommand, [title, timeNow, id], (error, results) => {
+    if (error)
+      return res
+        .status(500)
+        .json({ message: "Помилка при редагуванні завдання", error: error });
 
-  if (taskIndex === -1) {
-    res.status(404).json({ message: "Завдання не знайдено" });
-  }
+    if (results.affectedRows === 0)
+      return res.status(404).json({ message: "Завдання не знайдено" });
 
-  tasks[taskIndex] = {
-    id: id,
-    title: req.body.title,
-    done: req.body.done,
-    createdAt: req.body.createdAt,
-    updatedAt: req.requestTime,
-  };
-
-  fs.writeFileSync(DB, JSON.stringify(tasks));
-
-  res.json({ message: "Завдання повністю оновлено" });
+    res.json({ message: "Завдання успішно оновлено" });
+  });
 };
 
 export const updateTaskStatus = (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = Number(req.params.id);
+  const timeNow = new Date();
 
-  const dbData = fs.readFileSync(DB, "utf8");
-  const tasks = JSON.parse(dbData);
+  const sqlCommand =
+    "UPDATE tasks_table SET done = NOT done, updatedAt = ? WHERE id = ?";
 
-  const taskIndex = tasks.findIndex((t) => t.id === id);
+  db.query(sqlCommand, [timeNow, id], (error, results) => {
+    if (error)
+      return res
+        .status(500)
+        .json({ message: "Помилка при зміні статусу завдання", error: error });
 
-  if (taskIndex === -1) {
-    res.status(404).json({ message: "Завдання не знайдено" });
-  }
+    if (results.affectedRows === 0)
+      return res.status(404).json({ message: "Завдання не знайдено" });
 
-  tasks[taskIndex].done = !tasks[taskIndex].done;
-
-  fs.writeFileSync(DB, JSON.stringify(tasks));
-
-  res.json({ message: "Статус оновлено" });
+    res.json({ message: "Статус успішно оновлено" });
+  });
 };
 
 export const deleteTask = (req, res) => {
-  const id = parseInt(req.params.id);
+  const id = Number(req.params.id);
 
-  const dbData = fs.readFileSync(DB, "utf8");
-  const tasks = JSON.parse(dbData);
+  const sqlCommand = "DELETE FROM tasks_table WHERE id = ?";
 
-  const taskIndex = tasks.findIndex((t) => t.id === id);
+  db.query(sqlCommand, [id], (error, results) => {
+    if (error)
+      return res
+        .status(500)
+        .json({ message: "Помилка при видаленні завдання", error: error });
 
-  if (taskIndex === -1) {
-    res.status(404).json({ message: "Завдання не знайдено" });
-  }
+    if (results.affectedRows === 0)
+      return res.status(404).json({ message: "Завдання не знайдено" });
 
-  tasks.splice(taskIndex, 1);
-
-  fs.writeFileSync(DB, JSON.stringify(tasks));
-
-  res.json({ message: "завдання видалено" });
+    res.json({ message: "Завдання успішно видалено" });
+  });
 };
