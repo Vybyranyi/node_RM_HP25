@@ -1,6 +1,3 @@
-import fs from "fs";
-const DB = "db.json";
-
 import db from "../config/db.js";
 
 export const createTask = (req, res) => {
