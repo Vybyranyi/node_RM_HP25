@@ -1,29 +1,27 @@
-import db from "../config/db.js";
+import { PrismaClient } from "@prisma/client";
 
-export const createTask = (req, res) => {
-  const title = req.body.title;
-  const timeNow = new Date();
+const prisma = new PrismaClient();
 
-  const sqlCommand =
-    "INSERT INTO tasks_table (title, done, createdAt, updatedAt) VALUES (?, ?, ?, ?)";
+export const createTask = async (req, res) => {
+  try {
+    const title = req.body.title;
 
-  db.query(sqlCommand, [title, false, timeNow, timeNow], (error, results) => {
-    if (error)
-      return res
-        .status(500)
-        .json({ message: "Помилка при створенні завдання", error: error });
+    const newTask = await prisma.task.create({
+      data: {
+        title: title,
+      },
+    });
 
     res.json({
       message: "Завдання успішно створено",
-      task: {
-        id: results.insertId,
-        title: title,
-        done: false,
-        createdAt: timeNow,
-        updatedAt: timeNow,
-      },
+      task: newTask,
     });
-  });
+  } catch (error) {
+    res.status(500).json({
+      message: "Помилка при створенні завдання",
+      error: error,
+    });
+  }
 };
 
 export const getAllTasks = (req, res) => {
