@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -84,7 +84,13 @@ export const updateTask = async (req, res) => {
       task: updatedTask,
     });
   } catch (error) {
-    res.status(404).json({
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return res.status(404).json({ message: "Завдання не знайдено" });
+      }
+    }
+
+    res.status(500).json({
       message: "Помилка при оновленні завдання",
       error: error,
     });
